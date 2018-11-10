@@ -14,116 +14,190 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'model/products_repository.dart';
-import 'model/product.dart';
+import 'detail.dart';
 
-class HomePage extends StatelessWidget {
-  // TODO: Add a variable for Category (104)
-
-  List<Card> _buildGridCards(BuildContext context) {
-    List<Product> products = ProductsRepository.loadProducts(Category.all);
-
-    if (products == null || products.isEmpty) {
-      return const <Card>[];
-    }
-
+class HomePage extends StatefulWidget{
+  @override
+  State<StatefulWidget> createState() =>HomeState();
+}
+class HomeState extends State<HomePage>{
+  
+  double _sliderValue = 0.0;
+  TextEditingController _search = TextEditingController();
+  Stream<QuerySnapshot> term = Firestore.instance.collection('products').where("price", isGreaterThan: 0).snapshots();
+  Widget _buildGridCards(BuildContext context, DocumentSnapshot product) {
     final ThemeData theme = Theme.of(context);
     final NumberFormat formatter = NumberFormat.simpleCurrency(
         locale: Localizations.localeOf(context).toString());
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          AspectRatio(
+            aspectRatio: 18 / 11,
+            child: Image.network(
+              product.data['image'],
+              fit: BoxFit.fitWidth,
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    product.data['name'],
+                    style: theme.textTheme.title,
+                    maxLines: 1,
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    formatter.format(product.data['price']),
+                    style: theme.textTheme.body2,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      FlatButton(
+                        padding: EdgeInsets.all(0.0),
+                        child: Text("More",
+                          style: TextStyle(
+                            fontSize: 10.0
+                          ),
+                        ),
+                        onPressed: (){
+                          Navigator.push(context, 
+                            MaterialPageRoute(
+                              builder: (context) => DetailPage(data:product),
+                            )
+                          );
+                        },
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    return products.map((product) {
-      return Card(
-        // TODO: Adjust card heights (103)
-        child: Column(
-          // TODO: Center items on the card (103)
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            AspectRatio(
-              aspectRatio: 18 / 11,
-              child: Image.asset(
-                product.assetName,
-                package: product.assetPackage,
-                fit: BoxFit.fitWidth,
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
-                child: Column(
-                  // TODO: Align labels to the bottom and center (103)
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  // TODO: Change innermost Column (103)
-                  children: <Widget>[
-                    // TODO: Handle overflowing labels (103)
-                    // TODO(larche): Make headline6 when available
-                    Text(
-                      product.name,
-                      style: theme.textTheme.title,
-                      maxLines: 1,
-                    ),
-                    SizedBox(height: 8.0),
-                    // TODO(larche): Make subtitle2 when available
-                    Text(
-                      formatter.format(product.price),
-                      style: theme.textTheme.body2,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }).toList();
+  search(){
+    if(_search.text == ""){
+      setState(() {
+        term = Firestore.instance.collection('products').where("price",isGreaterThanOrEqualTo: _sliderValue).snapshots();
+      });
+    }
+    else {
+      setState(() {
+        term = Firestore.instance.collection('products').where("name", isEqualTo: _search.text).where("price",isGreaterThanOrEqualTo: _sliderValue).snapshots();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Return an AsymmetricView (104)
-    // TODO: Pass Category variable to AsymmetricView (104)
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(
-            Icons.menu,
-            semanticLabel: 'menu',
+            Icons.person,
+            semanticLabel: 'personal',
           ),
           onPressed: () {
-            print('Menu button');
+            Navigator.pushNamed(context, '/profile');
           },
         ),
-        title: Text('SHRINE'),
+        title: Text('Main'),
+        centerTitle: true,
         actions: <Widget>[
           IconButton(
             icon: Icon(
-              Icons.search,
-              semanticLabel: 'search',
+              Icons.add,
+              semanticLabel: 'add',
             ),
             onPressed: () {
-              print('Search button');
+              Navigator.pushNamed(context, '/add');
             },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.tune,
-              semanticLabel: 'filter',
-            ),
-            onPressed: () {
-              print('Filter button');
-            },
-          ),
+          )
         ],
       ),
-      body: Center(
-        child: GridView.count(
-          crossAxisCount: 2,
-          padding: EdgeInsets.all(16.0),
-          childAspectRatio: 8.0 / 9.0,
-          children: _buildGridCards(context),
-        ),
-      ),
+      body: Column(
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.all(10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(10.0),
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          height: 40.0,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200]
+                          ),
+                          child: TextField(
+                            controller: _search,
+                          ),
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Slider(
+                                onChanged: (double value) {
+                                  setState(() {
+                                    _sliderValue = value;                
+                                  });
+                                }, 
+                                value: _sliderValue,
+                                activeColor: Colors.red,
+                                max: 1000.0,
+                                min: 0.0,
+                              ),
+                            ),
+                            Text("\$${_sliderValue.toInt()}"),
+                          ],
+                        ),
+                        
+                      ],
+                    ),
+                  ),
+                ),
+                RaisedButton(
+                  child: Icon(Icons.search),
+                  padding: EdgeInsets.all(10.0),
+                  onPressed: ()=>search(),
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: term,
+              builder: (context, snapshot){
+                if (!snapshot.hasData) return Container(
+                  height: MediaQuery.of(context).size.height/2,
+                  child:CircularProgressIndicator()
+                );
+                return GridView.count(
+                  padding: EdgeInsets.all(10.0),
+                  crossAxisCount: 2,
+                  childAspectRatio: 4/5,
+                  children: snapshot.data.documents.map((product)=>_buildGridCards(context, product)).toList(),
+                );
+              },
+            ),
+          ),
+        ],
+      )
     );
   }
 }

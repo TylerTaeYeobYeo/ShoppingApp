@@ -4,9 +4,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import './global/currentUser.dart' as cu;
+import 'package:final_mobile/global/currentUser.dart' as cu;
 
 import 'home.dart';
+import 'add.dart';
+import 'profile.dart';
 
 void main() => runApp(RouteApp());
 
@@ -22,14 +24,16 @@ class RouteState extends State<RouteApp> {
       title: 'Main',
       home: HomePage(),
       theme: ThemeData(
-        primaryColor: Colors.white,
-        accentColor: Colors.black,
+        primaryColor: Colors.grey,
+        accentColor: Colors.blue,
       ),
       initialRoute: '/login',
       onGenerateRoute: _getRoute,
       routes:{
         '/home': (context) => HomePage(),
         '/login': (context) => LoginPage(),
+        '/add' : (context) => AddPage(),
+        '/profile': (context)=>ProfilePage(),
       },
     );
   }
@@ -70,9 +74,16 @@ class LoginState extends State<LoginPage>{
       "displayName": user.displayName,
       "photoUrl": user.photoUrl,
       "email": user.email,
-      "phoneNumber":user.phoneNumber,
     });
-    cu.currentUser.setCurrentUser(user);
+    cu.currentUser.setCurrentUser(user.uid, user.displayName, user.photoUrl, user.email);
+    Navigator.pushNamed(context, '/home');
+    return user;
+  }
+
+  Future<FirebaseUser> signInAnon() async {
+    FirebaseUser user = await FirebaseAuth.instance.signInAnonymously();
+    print(user);
+    cu.currentUser.setAnonymous(user.uid,);
     Navigator.pushNamed(context, '/home');
     return user;
   }
@@ -107,7 +118,7 @@ class LoginState extends State<LoginPage>{
                   color: Colors.white,
                 ),
               ),
-              onPressed: (){},
+              onPressed: ()=>signInAnon(),
               color: Colors.black
             ),
           ],

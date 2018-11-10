@@ -1,16 +1,39 @@
 library my_prj.globals;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class CurrentUser {
   final GoogleSignIn _googleSignIn = new GoogleSignIn();
-  FirebaseUser user;
+  String uid;
+  String photoUrl;
+  String displayName;
+  String email;
+  bool anonymous;
+  
+  String getUid(){return uid;}
+  String getPhoto(){return photoUrl;}
+  String getName(){return displayName;}
+  String getEmail(){return email;}
 
-  setCurrentUser(FirebaseUser input){
-    this.user = input;
+  setCurrentUser(String iuid,String iname,String iphoto, String iemail){
+    uid = iuid;
+    photoUrl = iphoto;
+    displayName = iname;
+    email = iemail;
+    anonymous = false;
   }
+  
+  setAnonymous(String iuid){
+    uid = iuid;
+    anonymous = true;
+  }
+
+  bool getAnonymous(){return anonymous;}
+
   clear(){
-    this.user = null;
+    uid = "";
+    photoUrl = "";
+    displayName = "";
+    email = "";
   }
   googleLogIn(){
     _googleSignIn.signIn();
