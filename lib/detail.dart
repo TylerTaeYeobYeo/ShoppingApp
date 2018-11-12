@@ -93,9 +93,10 @@ class DetailState extends State<DetailPage> {
           IconButton(
             icon: Icon(Icons.edit),
             onPressed: (){
-              setState(() {
-                edit = true;
-              });
+              if(cu.currentUser.getUid() == data.data['uid'])
+                setState(() {
+                  edit = true;
+                });
             },
           ),
           IconButton(
