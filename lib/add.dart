@@ -17,6 +17,14 @@ class AddState extends State<AddPage>{
   TextEditingController _price = new TextEditingController();
   TextEditingController _description = new TextEditingController();
 
+  @override
+  void dispose() { 
+    _name.dispose();
+    _price.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
   File _image;
 
   Future getImage() async {
