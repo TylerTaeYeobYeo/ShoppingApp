@@ -27,6 +27,13 @@ class HomeState extends State<HomePage>{
   double _sliderValue = 0.0;
   TextEditingController _search = TextEditingController();
   Stream<QuerySnapshot> term = Firestore.instance.collection('products').where("price", isGreaterThan: 0).snapshots();
+  
+  @override
+  void dispose() { 
+    _search.dispose();
+    super.dispose();
+  }
+  
   Widget _buildGridCards(BuildContext context, DocumentSnapshot product) {
     final ThemeData theme = Theme.of(context);
     final NumberFormat formatter = NumberFormat.simpleCurrency(
